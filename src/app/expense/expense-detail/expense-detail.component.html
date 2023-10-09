@@ -1,0 +1,140 @@
+<form [formGroup]="expenseForm" novalidate>
+  <div layout="row">
+    <mat-form-field>
+      <mat-label>Choose an Employee</mat-label>
+      <mat-select
+        placeholder="Employee"
+        formControlName="employeeid"
+        value="employeeid"
+        id="employeeid"
+      >
+        <mat-option *ngFor="let employee of employees" [value]="employee.id">{{
+          employee.lastname
+        }}</mat-option>
+      </mat-select>
+      <mat-error
+        flex
+        *ngIf="employeeid.errors && (employeeid.dirty || employeeid.touched)"
+        align="end"
+      >
+        <p align="end" mat-pad-xs *ngIf="employeeid.hasError('required')">
+          Choose Employee
+        </p>
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <br />
+  <div layout="row">
+    <mat-form-field>
+      <mat-label>Choose an Expense Category</mat-label>
+      <mat-select
+        placeholder="Expense Category"
+        formControlName="categoryid"
+        value="categoryid"
+      >
+        <mat-option [value]="" disabled selected>Category</mat-option>
+        <mat-option [value]="'TRAV'">Travel</mat-option>
+        <mat-option [value]="'LDG'">Lodging</mat-option>
+        <mat-option [value]="'PARK'">Parking</mat-option>
+        <mat-option [value]="'MEAL'">Meals</mat-option>
+        <mat-option [value]="'MISC'">Miscellaneous</mat-option>
+        <mat-option [value]="'OTH'">Other</mat-option>
+        <mat-option [value]="'TUI'">Tuition</mat-option>
+      </mat-select>
+      <mat-error
+        flex
+        *ngIf="categoryid.errors && (categoryid.dirty || categoryid.touched)"
+        align="end"
+      >
+        <p align="end" mat-pad-xs *ngIf="categoryid.hasError('required')">
+          Choose a Category
+        </p>
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <br />
+  <div layout="row">
+    <mat-form-field flex>
+      <mat-label>Describe Expense Incurred</mat-label>
+      <input
+        matInput
+        placeholder="Description"
+        type="text"
+        formControlName="description"
+      />
+      <mat-error
+        *ngIf="description.errors && (description.dirty || description.touched)"
+        align="end"
+        >Description is required
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div layout="row">
+    <mat-form-field flex>
+      <mat-label>How much are you claiming?</mat-label>
+      <input
+        matInput
+        placeholder="Amount"
+        type="text"
+        formControlName="amount"
+      />
+      <mat-error
+        *ngIf="amount.errors && (amount.dirty || amount.touched)"
+        align="end"
+      >
+        <p *ngIf="amount.hasError('required')">Amount is required.</p>
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div layout="row">
+    <mat-form-field>
+      <mat-label>When did the expense occur?</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="dateincurred" />
+      <mat-datepicker-toggle
+        matIconSuffix
+        [for]="picker"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error
+        *ngIf="
+          dateincurred.errors && (dateincurred.dirty || dateincurred.touched)
+        "
+        align="end"
+      >
+        Date is required
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <br />
+  <div class="mat-pad-sm">
+    <span>
+      <button
+        mat-raised-button
+        [disabled]="!expenseForm.valid"
+        type="button"
+        (click)="updateSelectedExpense()"
+      >
+        Save
+      </button>
+    </span>
+    <span>
+      <button
+        *ngIf="selectedExpense.id"
+        mat-raised-button
+        type="button"
+        (click)="deleted.emit(selectedExpense)"
+      >
+        Delete
+      </button>
+    </span>
+    <span>
+      <button
+        mat-raised-button
+        type="button"
+        (click)="cancelled.emit(selectedExpense)"
+      >
+        Cancel
+      </button>
+    </span>
+  </div>
+</form>

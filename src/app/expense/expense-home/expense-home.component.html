@@ -1,0 +1,72 @@
+<div style="margin: 5vw" *ngIf="hideEditForm">
+  <div style="padding-bottom: 5vw; font-size: large; font-weight: bold">
+    {{ msg }}
+  </div>
+  <table
+    mat-table
+    [dataSource]="dataSource"
+    matSort
+    (matSortChange)="sortExpensesWithObjectLiterals($event)"
+    matSortActive="vendorid"
+    matSortDirection="asc"
+    matSortDisableClear
+    expenses-table
+    class="mat-elevation-z8"
+  >
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        <div class="center-header">Expense</div>
+      </th>
+      <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+    </ng-container>
+    <!-- Date Column -->
+    <ng-container matColumnDef="dateincurred">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        <div class="center-header">Expense Date</div>
+      </th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.dateincurred | date : "dd/MM/yyyy" }}
+      </td>
+    </ng-container>
+    <!-- Employee Id Column -->
+    <ng-container matColumnDef="employeeid">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        <div class="center-header">Employee</div>
+      </th>
+      <td mat-cell *matCellDef="let element">{{ element.employeeid }}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: displayedColumns"
+      (click)="select(row)"
+    ></tr>
+  </table>
+  <div class="padtop15">
+    <mat-icon
+      (click)="newExpense()"
+      matTooltip="Add New Expense"
+      class="addicon"
+      color="primary"
+    >
+      control_point
+    </mat-icon>
+  </div>
+</div>
+<mat-card *ngIf="!hideEditForm">
+  <mat-card-header layout="row">
+    <mat-card-title
+      ><span>{{ msg }}</span></mat-card-title
+    >
+  </mat-card-header>
+  <mat-card-content>
+    <app-expense-detail
+      [selectedExpense]="expense"
+      [employees]="employees"
+      (cancelled)="cancel('cancelled')"
+      (saved)="save($event)"
+      (deleted)="delete($event)"
+    >
+    </app-expense-detail>
+  </mat-card-content>
+</mat-card>
