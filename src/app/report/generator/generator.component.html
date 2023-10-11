@@ -1,0 +1,124 @@
+<mat-card>
+  <mat-card-header layout="row">
+    <mat-card-title>
+      <span class="my-primary-text">{{ msg }}</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="generatorForm" novalidate>
+      <div layout="row" style="margin-top: 3vh">
+        <mat-form-field flex>
+          <mat-label>Employee</mat-label>
+          <mat-select
+            placeholder="Choose Employee"
+            formControlName="employeeid"
+          >
+            <mat-option *ngFor="let employee of employees" [value]="employee"
+              >{{ employee.lastname }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div *ngIf="pickedEmployee" layout="row">
+        <mat-form-field flex>
+          <mat-label>Expense</mat-label>
+          <mat-select
+            placeholder="Choose Expense"
+            formControlName="expenseid"
+            (change)="onPickExpense()"
+          >
+            <mat-option
+              *ngFor="let expense of employeeexpenses"
+              [value]="expense"
+            >
+              {{ expense.description }}</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <br />
+      <div *ngIf="hasExpenses" class="row">
+        <table>
+          <tr>
+            <th
+              colspan="3"
+              class="pad-xs text-center md-subhead my-primary-text"
+              style="font-weight: bold; padding: 2vh"
+            >
+              Expense Items for {{ selectedEmployee.firstname }}
+              {{ selectedEmployee.lastname }}
+            </th>
+          </tr>
+          <tr style="font-weight: bold; background-color: #eeeeee">
+            <td
+              style="
+                text-align: center;
+                width: 20vw;
+                padding-top: 2vh;
+                padding-bottom: 2vh;
+              "
+            >
+              Incurred
+            </td>
+            <td
+              style="
+                text-align: center;
+                width: 60vw;
+                padding-top: 2vh;
+                padding-bottom: 2vh;
+              "
+            >
+              Description
+            </td>
+            <td
+              style="
+                text-align: center;
+                width: 20vw;
+                padding-top: 2vh;
+                padding-bottom: 2vh;
+              "
+            >
+              Amount
+            </td>
+          </tr>
+          <tr *ngFor="let item of selectedexpenses">
+            <td class="text-left" style="padding-top: 1vh; padding-bottom: 1vh">
+              {{ item.dateincurred | date : "shortDate" }}
+            </td>
+            <td
+              width="700"
+              class="text-left"
+              style="padding-top: 1vh; padding-bottom: 1vh"
+            >
+              {{ item.description }}
+            </td>
+            <td
+              style="padding-top: 1vh; padding-bottom: 1vh; text-align: right"
+            >
+              {{ item.amount | currency : "USD" : "symbol" : "1.2-2" }}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align: right">Total:</td>
+            <td
+              class="my-accent-text"
+              style="font-weight: 600; text-align: right"
+            >
+              {{ total | currency : "USD" : "symbol" : "1.2-2" }}
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div style="text-align: center" *ngIf="hasExpenses">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="createReport()"
+          style="margin-top: 3vh"
+        >
+          Save Report
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
