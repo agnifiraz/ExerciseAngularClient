@@ -8,6 +8,8 @@ import { Employee } from '@app/employee/employee';
 import { NewEmployeeService } from '@app/employee/newemployee.service';
 import { Expense } from '@app/expense/expense';
 import { ExpenseService } from '@app/expense/expense.service';
+import { PDFURL } from '@app/constants';
+
 import {
   FormBuilder,
   FormControl,
@@ -209,4 +211,8 @@ export class GeneratorComponent implements OnInit, OnDestroy {
       },
     });
   } // createReport
+
+  viewPdf(): void {
+    window.open(`${PDFURL}${this.reportno}`, '');
+  } // viewPdf
 } // GeneratorComponent
