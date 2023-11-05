@@ -1,6 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatComponentsModule } from '@app/mat-components/mat-components.module';
+import { DeleteDialogComponent } from '@app/delete-dialog/delete-dialog.component';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import {
   FormControl,
   FormGroup,
@@ -40,7 +42,7 @@ export class ExpenseDetailComponent implements OnInit {
   amount: FormControl;
   receipt: FormControl;
   dateincurred: FormControl;
-  constructor(private builder: FormBuilder) {
+  constructor(private builder: FormBuilder, private dialog: MatDialog) {
     this.employeeid = new FormControl(
       '',
       Validators.compose([Validators.required])
@@ -94,4 +96,37 @@ export class ExpenseDetailComponent implements OnInit {
     this.selectedExpense.dateincurred = this.expenseForm.value.dateincurred;
     this.saved.emit(this.selectedExpense);
   } // updateSelectedExpense
+
+  openDeleteDialog(selectedExpense: Expense): void {
+    const dialogConfig = new MatDialogConfig();
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = false;
+    dialogConfig.data = {
+      title: `Delete Expense ${this.selectedExpense.id}`,
+      entityname: 'expense',
+    };
+    dialogConfig.panelClass = 'customdialog';
+    const dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.deleted.emit(this.selectedExpense);
+      }
+    });
+  } // openDeleteDialog
+
+  selectFile(event: Event): void {
+    const element = event.currentTarget as HTMLInputElement;
+    let fileList: FileList | null = element.files;
+    if (fileList) {
+      const file = fileList[0];
+      const reader: FileReader = new FileReader();
+      reader.onloadend = (e) => {
+        this.selectedExpense.receiptscan = reader.result?.toString();
+      };
+      reader.readAsDataURL(file);
+    }
+  } // selectFile
+  setReceipt(): void {
+    this.selectedExpense.receipt = !this.selectedExpense.receipt;
+  } // setReceipt
 } // ExpenseDetailComponent

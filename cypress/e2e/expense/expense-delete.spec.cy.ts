@@ -5,6 +5,7 @@ describe('expense delete test', () => {
     cy.contains('a', 'expenses').click();
     cy.contains('01/11/2023').click();
     cy.get('button').contains('Delete').click();
+    cy.get('button').contains('Yes').click();
     cy.contains('deleted!');
   });
 });

@@ -9,5 +9,5 @@ export interface Expense {
   receipt: boolean;
   dateincurred: string;
   amount: number;
-  receiptscan: string;
+  receiptscan?: string;
 }
