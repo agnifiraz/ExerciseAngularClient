@@ -42,6 +42,14 @@
       (click)="select(row)"
     ></tr>
   </table>
+
+  <mat-paginator
+    style="margin-top: 2vh"
+    [pageSize]="pageSize"
+    *ngIf="hideEditForm"
+    #paginator
+  ></mat-paginator>
+  <br />
   <div class="padtop15">
     <mat-icon
       (click)="newExpense()"

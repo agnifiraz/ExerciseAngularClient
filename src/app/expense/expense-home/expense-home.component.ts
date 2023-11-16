@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatComponentsModule } from '@app/mat-components/mat-components.module';
 import { Expense } from '@app/expense/expense';
@@ -9,6 +9,7 @@ import { NewEmployeeService } from '@app/employee/newemployee.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Sort } from '@angular/material/sort';
 import { ExpenseDetailComponent } from '../expense-detail/expense-detail.component';
+import { MatPaginator } from '@angular/material/paginator';
 @Component({
   selector: 'app-expense-home',
   standalone: true,
@@ -27,6 +28,15 @@ export class ExpenseHomeComponent implements OnInit {
   // sort stuff
   displayedColumns: string[] = ['id', 'dateincurred', 'employeeid'];
   dataSource: MatTableDataSource<Expense> = new MatTableDataSource<Expense>();
+
+  // MatPaginator
+  pageSize = 8;
+  @ViewChild(MatPaginator, { static: false }) set matPaginator(
+    paginator: MatPaginator
+  ) {
+    this.dataSource.paginator = paginator;
+  }
+
   employees: Employee[] = [];
   hideEditForm: boolean = true;
   constructor(

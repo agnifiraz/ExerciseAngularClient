@@ -18,6 +18,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import {
   MAT_FORM_FIELD_DEFAULT_OPTIONS,
   MatFormFieldModule,
@@ -41,6 +42,7 @@ const MaterialComponents = [
   MatCheckboxModule,
   MatExpansionModule,
   MatDialogModule,
+  MatPaginatorModule,
 ];
 
 @NgModule({
