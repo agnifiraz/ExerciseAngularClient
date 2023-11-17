@@ -9,7 +9,6 @@ import { NewEmployeeService } from '@app/employee/newemployee.service';
 import { Expense } from '@app/expense/expense';
 import { ExpenseService } from '@app/expense/expense.service';
 import { PDFURL } from '@app/constants';
-
 import {
   FormBuilder,
   FormControl,
@@ -17,35 +16,40 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { Subscription } from 'rxjs';
+
 @Component({
-  selector: 'app-generator',
+  selector: 'app-viewer',
   standalone: true,
   imports: [CommonModule, MatComponentsModule, ReactiveFormsModule],
-  templateUrl: './generator.component.html',
+  templateUrl: './viewer.component.html',
 })
-export class GeneratorComponent implements OnInit, OnDestroy {
+export class ViewerComponent implements OnInit, OnDestroy {
   // form
   generatorForm: FormGroup;
   employeeid: FormControl;
   expenseid: FormControl;
+  reportid: FormControl;
   // data
   formSubscription?: Subscription;
-  expenses: Expense[] = []; // everybody's expenses
+  //expenses: Expense[] = []; // everybody's expenses
+  reports: Report[] = [];
   employees: Employee[] = []; // all employees
-  employeeexpenses: Expense[] = []; // all expenses for a particular employee
+  employeeExpenses?: Expense[]; // expenses for selected employee
+  reportExpenses?: Expense[]; // expenses matching report items keys
+
   items: ReportItem[] = []; // expense items that will be in report
-  selectedexpenses: Expense[] = []; // expenses that being displayed currently in app
   selectedExpense: Expense; // the current selected expense
+  selectedReport: Report;
   selectedEmployee: Employee; // the current selected employee
   // misc
-  pickedExpense: boolean;
   pickedEmployee: boolean;
+  pickedReport: boolean;
   generated: boolean;
-  hasExpenses: boolean;
+  hasReport: boolean;
   msg: string;
   total: number;
   reportno: number = 0;
-  
+
   constructor(
     private builder: FormBuilder,
     private employeeService: NewEmployeeService,
@@ -53,14 +57,16 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     private reportService: ReportService
   ) {
     this.pickedEmployee = false;
-    this.pickedExpense = false;
+    this.pickedReport = false;
     this.generated = false;
     this.msg = '';
     this.employeeid = new FormControl('');
     this.expenseid = new FormControl('');
+    this.reportid = new FormControl('');
     this.generatorForm = this.builder.group({
       expenseid: this.expenseid,
       employeeid: this.employeeid,
+      reportid: this.reportid,
     });
     this.selectedExpense = {
       id: 0,
@@ -80,12 +86,18 @@ export class GeneratorComponent implements OnInit, OnDestroy {
       phoneno: '',
       email: '',
     };
-    this.hasExpenses = false;
+    this.selectedReport = {
+      id: 0,
+      employeeid: 0,
+      items: [],
+      datecreated: '',
+    };
+    this.hasReport = false;
     this.total = 0.0;
   } // constructor
   ngOnInit(): void {
     this.onPickEmployee(); // sets up subscription for dropdown click
-    this.onPickExpense(); // sets up subscription for dropdown click
+    this.onPickReport();
     this.msg = 'loading employees from server...';
     this.getAllEmployees();
   } // ngOnInit
@@ -101,6 +113,7 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     this.employeeService.getAll().subscribe({
       // Create observer object
       next: (employees: Employee[]) => {
+        console.log('Report:', employees);
         this.employees = employees;
       },
       error: (err: Error) =>
@@ -109,21 +122,36 @@ export class GeneratorComponent implements OnInit, OnDestroy {
         passedMsg ? (this.msg = passedMsg) : (this.msg = `Employees loaded!`),
     });
   } // getAllEmployees
-  /**
-   * loadEmployeeExpenses - retrieve a particular employee's expenses
-   */
-  loadEmployeeExpenses(): void {
-    this.employeeexpenses = [];
-    this.expenseService.getSome(this.selectedEmployee.id).subscribe({
-      // observer object
-      next: (expenses: Expense[]) => {
-        this.employeeexpenses = expenses;
-      },
-      error: (err: Error) =>
-        (this.msg = `product fetch failed! - ${err.message}`),
-      complete: () => {},
+
+  getAllReports(employeeId: number): void {
+    console.log('Fetching reports for employeeId:', employeeId);
+    this.reportService.getById(employeeId).subscribe((report) => {
+      console.log('Report:', report);
+
+      // Check if the server response is an array or a single object
+      if (Array.isArray(report)) {
+        this.reports = report;
+      } else {
+        this.reports = [report]; // Wrap the single report in an array
+      }
+
+      this.msg = 'Employees and reports loaded!';
+      console.log('Complete!');
     });
-  } // loadEmployeeExpenses
+  }
+
+  /**
+   * loadEmployeeExpenses - obtain a particular employee's expenses
+   * we'll match the report expenses to them later
+   */
+  loadEmployeeExpenses(id: number): void {
+    // expenses aren't part of the page, so we don't use async pipe here
+    this.msg = 'loading expenses...';
+    this.expenseService
+      .getSome(id)
+      .subscribe((expenses) => (this.employeeExpenses = expenses));
+  }
+
   /**
    * onPickEmployee - Another way to use Observables, subscribe to the select change event
    * then load specific employee expenses for subsequent selection
@@ -142,78 +170,54 @@ export class GeneratorComponent implements OnInit, OnDestroy {
           receipt: false,
           receiptscan: '',
         };
+        this.selectedReport = {
+          id: 0,
+          employeeid: 0,
+          items: [],
+          datecreated: '',
+        };
         this.selectedEmployee = val;
-        this.loadEmployeeExpenses();
-        this.pickedExpense = false;
-        this.hasExpenses = false;
-        this.msg = 'choose expense for employee';
+        this.loadEmployeeExpenses(val.id);
+        this.getAllReports(val.id); // Pass the employee id to load reports
+        this.pickedReport = false;
+        this.hasReport = false;
+        this.msg = 'choose Report for employee';
         this.pickedEmployee = true;
         this.generated = false;
         this.items = []; // array for the report
-        this.selectedexpenses = []; // array for the details in app html
+        //this.selectedExpense = []; // array for the details in app html
       });
   } // onPickEmployee
-  /**
-   * onPickExpense - subscribe to the select change event then
-   * update array containing items.
-   */
-  onPickExpense(): void {
-    const expenseSubscription = this.generatorForm
-      .get('expenseid')
+
+  onPickReport(): void {
+    const reportSubscription = this.generatorForm
+      .get('reportid')
       ?.valueChanges.subscribe((val) => {
-        this.selectedExpense = val;
-        const item: ReportItem = {
-          id: 0,
-          reportid: 0,
-          expenseid: this.selectedExpense?.id,
-        };
-        if (
-          this.items.find((item) => item.expenseid === this.selectedExpense?.id)
-        ) {
-          // ignore entry
-        } else {
-          // add entry
-          this.items.push(item);
-          this.selectedexpenses.push(this.selectedExpense);
+        console.log('Selected Report:', val);
+        this.selectedReport = val;
+
+        if (this.employeeExpenses !== undefined) {
+          this.reportExpenses = this.employeeExpenses.filter((expense) =>
+            this.selectedReport?.items.some(
+              (item) => item.expenseid === expense.id
+            )
+          );
         }
-        if (this.items.length > 0) {
-          this.hasExpenses = true;
-        }
+        console.log('Report Expenses:', this.reportExpenses);
+
+        this.hasReport = true;
+
+        this.reportno = this.selectedReport.id;
+
+        console.log('Length is ' + this.items.length);
         this.total = 0.0;
-        this.selectedexpenses.forEach((exp) => (this.total += exp.amount));
+        this.reportExpenses?.forEach((exp) => (this.total += exp.amount));
       });
-    this.formSubscription?.add(expenseSubscription); // add it as a child, so all can be destroyed together
-  } // onPickExpense
-  /**
-   * createReport - create the client side report
-   */
-  createReport(): void {
-    this.generated = false;
-    const report: Report = {
-      id: 0,
-      items: this.items,
-      employeeid: this.selectedExpense.employeeid,
-    };
-    this.reportService.create(report).subscribe({
-      // observer object
-      next: (report: Report) => {
-        // server should be returning report with new id
-        report.id > 0
-          ? (this.msg = `Report ${report.id} added!`)
-          : (this.msg = 'Report not added! - server error');
-        this.reportno = report.id;
-      },
-      error: (err: Error) => (this.msg = `Report not added! - ${err.message}`),
-      complete: () => {
-        this.hasExpenses = false;
-        this.pickedEmployee = false;
-        this.pickedExpense = false;
-        this.generated = true;
-      },
-    });
-  } // createReport
+
+    this.formSubscription?.add(reportSubscription);
+  } // onPickReport
 
   viewPdf(): void {
     window.open(`${PDFURL}${this.reportno}`, '');
   } // viewPdf
-} // GeneratorComponent
+}
